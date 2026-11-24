@@ -1,6 +1,6 @@
 import type { Project, State } from './types'
 import { fa, STATUS, daysLeft, fmt, todayLong, progress } from './util'
-import { I, Ico } from './icons'
+import { Activity, CalendarDays, CircleCheck, Ellipsis, Folder, Hand, Plus } from 'lucide-react'
 import FirstRun from './FirstRun'
 type P = { st: State; go: (r: string) => void; toggle: (id: string) => void }
 const Days = ({ end }: { end: string | null }) => {
@@ -25,17 +25,17 @@ export default function Dashboard({ st, go, toggle }: P) {
   return (
     <>
       <header className="hd">
-        <div><div className="s m">داشبورد</div><h1>سلام، خوش اومدی 👋</h1><p>امروز چه خبر از پروژه‌هات؟</p></div>
+        <div><div className="s m">داشبورد</div><h1>سلام، خوش اومدی <Hand className="ui-icon ui-icon-lg" aria-hidden="true" /></h1><p>امروز چه خبر از پروژه‌هات؟</p></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <span className="m">{todayLong()}</span>
-          <button className="btn" onClick={() => go('project-new')}><Ico d={I.plus} />پروژه جدید</button>
+          <button className="btn" onClick={() => go('project-new')}><Plus className="ui-icon ui-icon-lg" aria-hidden="true" />پروژه جدید</button>
         </div>
       </header>
       <section className="g4">
-        <div className="c k f"><span className="m"><Ico c="ki" d={I.folder} />کل پروژه‌ها</span><span className="n">{fa(ps.length)}</span><span className="s m">{fa(active.length)} فعال، {fa(done)} تکمیل‌شده</span></div>
-        <div className="c k"><span className="m"><Ico c="ki" d={I.pulse} />در حال انجام</span><span className="n">{fa(active.length)}</span><span className="s m">میانگین پیشرفت {fa(avg)}٪</span></div>
-        <div className="c k"><span className="m"><Ico c="ki" d={I.ok} />تکمیل‌شده</span><span className="n">{fa(done)}</span><div className="pr" style={{ marginTop: 4 }}><i style={{ width: (done / ps.length) * 100 + '%', background: 'var(--g)' }} /></div></div>
-        <div className="c k"><span className="m"><Ico c="ki" d={I.cal} />ددلاین‌های نزدیک</span><span className="n">{fa(late + soon)}</span>
+        <div className="c k f"><span className="m"><Folder className="ui-icon ki" aria-hidden="true" />کل پروژه‌ها</span><span className="n">{fa(ps.length)}</span><span className="s m">{fa(active.length)} فعال، {fa(done)} تکمیل‌شده</span></div>
+        <div className="c k"><span className="m"><Activity className="ui-icon ki" aria-hidden="true" />در حال انجام</span><span className="n">{fa(active.length)}</span><span className="s m">میانگین پیشرفت {fa(avg)}٪</span></div>
+        <div className="c k"><span className="m"><CircleCheck className="ui-icon ki" aria-hidden="true" />تکمیل‌شده</span><span className="n">{fa(done)}</span><div className="pr" style={{ marginTop: 4 }}><i style={{ width: (done / ps.length) * 100 + '%', background: 'var(--g)' }} /></div></div>
+        <div className="c k"><span className="m"><CalendarDays className="ui-icon ki" aria-hidden="true" />ددلاین‌های نزدیک</span><span className="n">{fa(late + soon)}</span>
           <span className="s">{late + soon === 0 ? <span className="m">همه‌چیز سر موعده</span> : <>{late > 0 && <span className="b br">{fa(late)} عقب‌افتاده</span>} {soon > 0 && <span className="b bw">{fa(soon)} تا ۷ روز دیگر</span>}</>}</span></div>
       </section>
       <div className="gd">
@@ -47,7 +47,7 @@ export default function Dashboard({ st, go, toggle }: P) {
                 const g = progress(tasks, p.id)
                 return (
                   <div key={p.id} className="c pc" onClick={() => go('p:' + p.id)}>
-                    <div className="rw"><b className="t2">{p.name}</b><span className="bw2"><span className={'b ' + STATUS[p.status].cls}>{STATUS[p.status].label}</span><button className="dm" aria-label="گزینه‌ها" onClick={e => e.stopPropagation()}><Ico d={I.dots} /></button></span></div>
+                    <div className="rw"><b className="t2">{p.name}</b><span className="bw2"><span className={'b ' + STATUS[p.status].cls}>{STATUS[p.status].label}</span><button className="dm" aria-label="گزینه‌های پروژه" data-tooltip="گزینه‌های پروژه" onClick={e => e.stopPropagation()}><Ellipsis className="ui-icon" aria-hidden="true" /></button></span></div>
                     <div className="rw s m"><span>{fa(g.done)} از {fa(g.total)} وظیفه</span><b style={{ color: 'var(--t)' }}>{fa(g.pct)}٪</b></div>
                     <div className="pr"><i style={{ width: g.pct + '%' }} /></div>
                     <div className="rw s"><span className="m">{p.end ? `ددلاین ${fmt(p.end)}` : 'بدون ددلاین'}</span><Days end={p.end} /></div>
@@ -58,12 +58,12 @@ export default function Dashboard({ st, go, toggle }: P) {
           ) : <div className="c" style={{ padding: 28, textAlign: 'center' }}><b>پروژهٔ فعالی نداری</b><p className="m s" style={{ margin: 0 }}>یک پروژه رو شروع کن یا وضعیتش رو به «در حال انجام» ببر.</p></div>}
         </section>
         <aside className="sec">
-          <div className="c" style={{ padding: '18px 20px' }}><h2 className="h2" style={{ marginBottom: 8 }}>ددلاین‌های پیش رو</h2>
+          <div className="c dashboard-side-panel"><h2 className="h2 dashboard-side-heading">ددلاین‌های پیش رو</h2>
             {dl.length ? dl.slice(0, 3).map(p => { const d = daysLeft(p.end!); return (
               <div key={p.id} className="dl"><span className="dt" style={{ background: d < 0 ? 'var(--r)' : d <= 7 ? '#D9930D' : '#B8BDC9' }} /><div><b>{p.name}</b><div className="s m">{fmt(p.end!)}</div></div>{d <= 7 ? chip(d) : <span className="s m">{fa(d)} روز مانده</span>}</div>) })
               : <p className="m s" style={{ margin: 0 }}>ددلاین نزدیکی نداری.</p>}
           </div>
-          <div className="c" style={{ padding: '18px 20px' }}><h2 className="h2" style={{ marginBottom: 8 }}>وظایف باقی‌مانده</h2>
+          <div className="c dashboard-side-panel"><h2 className="h2 dashboard-side-heading">وظایف باقی‌مانده</h2>
             {pend.length ? pend.map(({ t, p }) => (
               <div key={t.id} className="tk"><span className="ck" role="checkbox" aria-checked={t.done} tabIndex={0} aria-label={t.text} onClick={() => toggle(t.id)} onKeyDown={e => (e.key === ' ' || e.key === 'Enter') && toggle(t.id)} /><div>{t.text}<div className="s m">{p.name}</div></div></div>))
               : <p className="m s" style={{ margin: 0 }}>وظیفهٔ باقی‌مونده‌ای نیست.</p>}

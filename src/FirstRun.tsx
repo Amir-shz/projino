@@ -1,8 +1,8 @@
-import { I, Ico } from './icons'
+import { Hand, Plus } from 'lucide-react'
 export default function FirstRun({ go }: { go: (r: string) => void }) {
   return (
     <div className="fr">
-      <header className="hd1"><div className="s m">داشبورد</div><h1>سلام، به پروژینو خوش اومدی 👋</h1><p>همه‌چیز آماده‌ست؛ فقط یک پروژه کم داریم.</p></header>
+      <header className="hd1"><div className="s m">داشبورد</div><h1>سلام، به پروژینو خوش اومدی <Hand className="ui-icon ui-icon-lg" aria-hidden="true" /></h1><p>همه‌چیز آماده‌ست؛ فقط یک پروژه کم داریم.</p></header>
       <section className="g4">
         {['کل پروژه‌ها', 'در حال انجام', 'تکمیل‌شده', 'ددلاین‌های نزدیک'].map(l => <div key={l} className="c k"><span className="m">{l}</span><span className="n">۰</span></div>)}
       </section>
@@ -11,7 +11,7 @@ export default function FirstRun({ go }: { go: (r: string) => void }) {
         <h2>اولین پروژه‌ت رو بساز</h2>
         <p>برای هر کار یا قرارداد یک پروژه بساز، وظایفش رو تیک بزن و ددلاینش رو از دست نده.</p>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn" onClick={() => go('project-new')}><Ico d={I.plus} />ایجاد پروژه</button>
+          <button className="btn" onClick={() => go('project-new')}><Plus className="ui-icon ui-icon-lg" aria-hidden="true" />ایجاد پروژه</button>
           <button className="bt" onClick={() => go('settings')}>بازیابی از فایل پشتیبان</button>
         </div>
         <div className="st">

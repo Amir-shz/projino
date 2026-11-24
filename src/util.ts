@@ -13,6 +13,12 @@ export const STATUS: Record<Status, { label: string; cls: string }> = {
   pending: { label: 'در انتظار شروع', cls: 'bn' }, active: { label: 'در حال انجام', cls: 'bi' },
   completed: { label: 'تکمیل‌شده', cls: 'bg' }, paused: { label: 'متوقف‌شده', cls: 'bw' }, cancelled: { label: 'لغوشده', cls: 'bx' },
 }
+export const STATUS_TONE: Record<Status, string> = {
+  pending: '#B8BDC9', active: '#6258E8', completed: '#0B7A56', paused: '#D9930D', cancelled: '#C13B3B',
+}
+export const STATUS_OPTIONS = (Object.keys(STATUS) as Status[]).map(value => ({
+  value, label: STATUS[value].label, tone: STATUS_TONE[value],
+}))
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 export const today = () => iso(new Date())
 export const daysLeft = (end: string) => {
@@ -21,6 +27,7 @@ export const daysLeft = (end: string) => {
 }
 const F = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fa-IR-u-ca-persian', o)
 export const fmt = (s: string) => F({ day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(s + 'T12:00:00'))
+export const fmtShort = (s: string) => F({ day: 'numeric', month: 'long' }).format(new Date(s + 'T12:00:00'))
 const jalaliParts = new Intl.DateTimeFormat('en-u-ca-persian-nu-latn', {
   day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'UTC',
 })

@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import type { Preferences, State } from './types'
-import { DEFAULT_PREFERENCES, fa, fmt, today } from './util'
+import { DEFAULT_PREFERENCES, fa, today } from './util'
+import Dropdown from './Dropdown'
 
 export default function Settings({ st, onPreferences, onImport }: {
   st: State
@@ -14,6 +15,9 @@ export default function Settings({ st, onPreferences, onImport }: {
   const [error, setError] = useState('')
   const preferences = st.preferences
   const update = (patch: Partial<Preferences>) => onPreferences({ ...preferences, ...patch })
+  const dataSize = new Blob([JSON.stringify(st)]).size
+  const dataSizeLabel = dataSize >= 1024 ? `${fa(Math.round(dataSize / 1024))} کیلوبایت` : `${fa(dataSize)} بایت`
+  const warningDayChoices = [...new Set([3, 7, 10, 14, preferences.deadlineWarningDays])].sort((a, b) => a - b)
 
   const backup = () => {
     const data = JSON.stringify({ app: 'Projino', version: 1, exportedAt: new Date().toISOString(), state: st }, null, 2)
@@ -63,30 +67,39 @@ export default function Settings({ st, onPreferences, onImport }: {
 
   return <>
     <header className="page-head"><div><div className="s m">شخصی‌سازی</div><h1>تنظیمات</h1><p>همه‌چیز ساده و محلی، فقط روی همین رایانه.</p></div></header>
-    <section className="c settings-panel">
-      <header className="settings-title"><div className="settings-icon">↥</div><div><h2>پشتیبان‌گیری و بازیابی</h2><p className="m">همهٔ پروژه‌ها و وظایفت در یک فایل ذخیره می‌شود.</p></div></header>
-      <div className="settings-actions">
-        <button className="btn" onClick={backup}>گرفتن پشتیبان</button>
-        <button className="bt" onClick={() => fileInput.current?.click()}>بازیابی از فایل</button>
-        <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={restore} />
-        <span className="s m">{backupDate ? `آخرین پشتیبان: ${backupDate}` : 'پشتیبان روی دستگاهت ذخیره می‌شود.'}</span>
+    <div className="settings-layout">
+      <div className="settings-main">
+        <section className="c settings-panel">
+          <header className="settings-title"><div><h2>پشتیبان‌گیری و بازیابی</h2><p className="m">همهٔ پروژه‌ها و وظایفت توی یک فایل ذخیره می‌شه. هر وقت خواستی برش می‌گردونی.</p></div></header>
+          <div className="settings-actions">
+            <button className="btn" onClick={backup}>گرفتن پشتیبان</button>
+            <button className="bt" onClick={() => fileInput.current?.click()}>بازیابی از فایل</button>
+            <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={restore} />
+            <span className="s m">{backupDate ? `آخرین پشتیبان: ${backupDate}` : 'هنوز پشتیبانی گرفته نشده.'}</span>
+          </div>
+          {message && <div className="inline-success" role="status">{message}</div>}
+          {error && <div className="form-error" role="alert">{error}</div>}
+        </section>
+        <section className="c settings-panel">
+          <header className="settings-title"><div><h2>ترجیحات</h2><p className="m">رفتار پروژینو رو با روش کار خودت هماهنگ کن.</p></div></header>
+          <div className="preference-row"><div><b>شروع هفته</b><span className="s m">در تقویم و انتخاب تاریخ</span></div><Dropdown className="settings-dropdown" ariaLabel="شروع هفته" value={preferences.weekStart} options={[{ value: 'saturday', label: 'شنبه' }, { value: 'sunday', label: 'یکشنبه' }, { value: 'monday', label: 'دوشنبه' }]} onChange={weekStart => update({ weekStart })} /></div>
+          <div className="preference-row"><div><b>هشدار ددلاین</b><span className="s m">از چند روز مانده به موعد، پروژه نزدیک نشان داده می‌شود</span></div><Dropdown className="settings-dropdown" ariaLabel="هشدار ددلاین" value={preferences.deadlineWarningDays} options={warningDayChoices.map(days => ({ value: days, label: `${fa(days)} روز` }))} onChange={deadlineWarningDays => update({ deadlineWarningDays })} /></div>
+          <Toggle label="نمایش ارقام فارسی" detail="مثل ۱۲۳ به‌جای 123" checked={preferences.persianDigits} onChange={checked => update({ persianDigits: checked })} />
+          <Toggle label="تأیید قبل از حذف" detail="برای حذف پروژه و وظیفه" checked={preferences.confirmDelete} onChange={checked => update({ confirmDelete: checked })} />
+          <div className="preference-row"><div><b>صفحهٔ شروع برنامه</b><span className="s m">هنگام بازشدن پروژینو</span></div><Dropdown className="settings-dropdown" ariaLabel="صفحهٔ شروع برنامه" value={preferences.startPage} options={[{ value: 'dashboard', label: 'داشبورد' }, { value: 'projects', label: 'پروژه‌ها' }]} onChange={startPage => update({ startPage })} /></div>
+        </section>
       </div>
-      {message && <div className="inline-success" role="status">{message}</div>}
-      {error && <div className="form-error" role="alert">{error}</div>}
-    </section>
-    <section className="c settings-panel">
-      <header className="settings-title"><div className="settings-icon">⚙</div><div><h2>ترجیحات</h2><p className="m">رفتار پروژینو را با روش کار خودت هماهنگ کن.</p></div></header>
-      <div className="preference-row"><div><b>شروع هفته</b><span className="s m">در تقویم و انتخاب تاریخ</span></div><select className="field compact-field" value={preferences.weekStart} onChange={event => update({ weekStart: event.target.value as Preferences['weekStart'] })}><option value="saturday">شنبه</option><option value="sunday">یکشنبه</option></select></div>
-      <div className="preference-row"><div><b>هشدار ددلاین</b><span className="s m">پروژه از چند روز مانده به موعد نزدیک نشان داده شود</span></div><select className="field compact-field" value={preferences.deadlineWarningDays} onChange={event => update({ deadlineWarningDays: Number(event.target.value) })}>{[3, 5, 7, 14, 30].map(days => <option value={days} key={days}>{fa(days)} روز</option>)}</select></div>
-      <Toggle label="نمایش ارقام فارسی" detail="مثل ۱۲۳ به‌جای 123" checked={preferences.persianDigits} onChange={checked => update({ persianDigits: checked })} />
-      <Toggle label="تأیید قبل از حذف" detail="برای حذف پروژه و وظیفه" checked={preferences.confirmDelete} onChange={checked => update({ confirmDelete: checked })} />
-      <div className="preference-row"><div><b>صفحهٔ شروع برنامه</b><span className="s m">هنگام بازشدن پروژینو</span></div><select className="field compact-field" value={preferences.startPage} onChange={event => update({ startPage: event.target.value as Preferences['startPage'] })}><option value="dashboard">داشبورد</option><option value="projects">پروژه‌ها</option></select></div>
-    </section>
-    <section className="c settings-panel privacy-panel">
-      <header className="settings-title"><div className="settings-icon">●</div><div><h2>داده‌های شما</h2><p className="m">اطلاعات روی همین دستگاه ذخیره می‌شود و جایی ارسال نمی‌شود.</p></div></header>
-      <div className="data-stats"><div><b>{fa(st.projects.length)}</b><span className="m">پروژه</span></div><div><b>{fa(st.tasks.length)}</b><span className="m">وظیفه</span></div><div><b>{fa(new Blob([JSON.stringify(st)]).size)} بایت</b><span className="m">حجم داده</span></div></div>
-      <div className="s m">تاریخ امروز: {fmt(today())}</div>
-    </section>
+      <aside className="c settings-panel data-panel">
+        <header className="settings-title"><div><h2>داده‌های شما</h2><p className="m">روی همین دستگاه ذخیره می‌شن و جایی ارسال نمی‌شن.</p></div></header>
+        <div className="data-rows">
+          <div><span>پروژه‌ها</span><b>{fa(st.projects.length)}</b></div>
+          <div><span>وظایف</span><b>{fa(st.tasks.length)}</b></div>
+          <div><span>حجم داده</span><b>{dataSizeLabel}</b></div>
+          <div><span>محل ذخیره</span><b>محلی روی همین دستگاه</b></div>
+          <div><span>نسخه</span><b>۱٫۰٫۰</b></div>
+        </div>
+      </aside>
+    </div>
   </>
 }
 
