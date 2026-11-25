@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react'
 import type { Preferences, State } from './types'
 import { DEFAULT_PREFERENCES, fa, today } from './util'
 import Dropdown from './Dropdown'
+import { Database, Download, HardDrive, SlidersHorizontal, Upload } from 'lucide-react'
 
 export default function Settings({ st, onPreferences, onImport }: {
   st: State
@@ -66,14 +67,14 @@ export default function Settings({ st, onPreferences, onImport }: {
   }
 
   return <>
-    <header className="page-head"><div><div className="s m">شخصی‌سازی</div><h1>تنظیمات</h1><p>همه‌چیز ساده و محلی، فقط روی همین رایانه.</p></div></header>
+    <header className="page-head"><div><h1>تنظیمات</h1><p>ترجیحات برنامه، پشتیبان‌گیری و بازیابی داده‌ها</p></div></header>
     <div className="settings-layout">
       <div className="settings-main">
         <section className="c settings-panel">
-          <header className="settings-title"><div><h2>پشتیبان‌گیری و بازیابی</h2><p className="m">همهٔ پروژه‌ها و وظایفت توی یک فایل ذخیره می‌شه. هر وقت خواستی برش می‌گردونی.</p></div></header>
+          <header className="settings-title"><span className="tile-icon brand"><HardDrive className="ui-icon" aria-hidden="true" /></span><div><h2>پشتیبان‌گیری و بازیابی</h2><p className="m">یک فایل پشتیبان از پروژه‌ها، وظایف و تنظیمات بگیر.</p></div></header>
           <div className="settings-actions">
-            <button className="btn" onClick={backup}>گرفتن پشتیبان</button>
-            <button className="bt" onClick={() => fileInput.current?.click()}>بازیابی از فایل</button>
+            <button className="btn" onClick={backup}><Download className="ui-icon" aria-hidden="true" />گرفتن پشتیبان</button>
+            <button className="bt" onClick={() => fileInput.current?.click()}><Upload className="ui-icon" aria-hidden="true" />بازیابی از فایل</button>
             <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={restore} />
             <span className="s m">{backupDate ? `آخرین پشتیبان: ${backupDate}` : 'هنوز پشتیبانی گرفته نشده.'}</span>
           </div>
@@ -81,7 +82,7 @@ export default function Settings({ st, onPreferences, onImport }: {
           {error && <div className="form-error" role="alert">{error}</div>}
         </section>
         <section className="c settings-panel">
-          <header className="settings-title"><div><h2>ترجیحات</h2><p className="m">رفتار پروژینو رو با روش کار خودت هماهنگ کن.</p></div></header>
+          <header className="settings-title"><span className="tile-icon blue"><SlidersHorizontal className="ui-icon" aria-hidden="true" /></span><div><h2>ترجیحات</h2></div></header>
           <div className="preference-row"><div><b>شروع هفته</b><span className="s m">در تقویم و انتخاب تاریخ</span></div><Dropdown className="settings-dropdown" ariaLabel="شروع هفته" value={preferences.weekStart} options={[{ value: 'saturday', label: 'شنبه' }, { value: 'sunday', label: 'یکشنبه' }, { value: 'monday', label: 'دوشنبه' }]} onChange={weekStart => update({ weekStart })} /></div>
           <div className="preference-row"><div><b>هشدار ددلاین</b><span className="s m">از چند روز مانده به موعد، پروژه نزدیک نشان داده می‌شود</span></div><Dropdown className="settings-dropdown" ariaLabel="هشدار ددلاین" value={preferences.deadlineWarningDays} options={warningDayChoices.map(days => ({ value: days, label: `${fa(days)} روز` }))} onChange={deadlineWarningDays => update({ deadlineWarningDays })} /></div>
           <Toggle label="نمایش ارقام فارسی" detail="مثل ۱۲۳ به‌جای 123" checked={preferences.persianDigits} onChange={checked => update({ persianDigits: checked })} />
@@ -90,7 +91,7 @@ export default function Settings({ st, onPreferences, onImport }: {
         </section>
       </div>
       <aside className="c settings-panel data-panel">
-        <header className="settings-title"><div><h2>داده‌های شما</h2><p className="m">روی همین دستگاه ذخیره می‌شن و جایی ارسال نمی‌شن.</p></div></header>
+        <header className="settings-title"><span className="tile-icon green"><Database className="ui-icon" aria-hidden="true" /></span><div><h2>داده‌های شما</h2></div></header>
         <div className="data-rows">
           <div><span>پروژه‌ها</span><b>{fa(st.projects.length)}</b></div>
           <div><span>وظایف</span><b>{fa(st.tasks.length)}</b></div>

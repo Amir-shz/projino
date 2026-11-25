@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Project, State, Status } from './types'
 import { daysLeft, fa, fmt, progress, STATUS, STATUS_OPTIONS } from './util'
-import { LayoutGrid, List, Plus, Search } from 'lucide-react'
+import { CalendarDays, Folder, LayoutGrid, List, Plus, Search } from 'lucide-react'
 import Dropdown, { type DropdownOption } from './Dropdown'
 import ProjectMenu from './ProjectMenu'
 
@@ -52,7 +52,7 @@ export default function Projects({ st, openProject, createProject, editProject, 
 
   return <>
     <header className="page-head">
-      <div><div className="s m">مدیریت کارها</div><h1>پروژه‌ها</h1><p>همهٔ پروژه‌هات رو یک‌جا مدیریت کن.</p></div>
+      <div><h1>پروژه‌ها</h1><p>جست‌وجو، مرتب‌سازی و مدیریت پروژه‌ها</p></div>
       <button className="btn" onClick={createProject}><Plus className="ui-icon ui-icon-lg" aria-hidden="true" />ایجاد پروژه</button>
     </header>
     <section className="c projects-toolbar">
@@ -60,12 +60,12 @@ export default function Projects({ st, openProject, createProject, editProject, 
       <Dropdown ariaLabel="فیلتر وضعیت" value={status} options={filterOptions} onChange={setStatus} showOptionTones />
       <Dropdown ariaLabel="مرتب‌سازی" value={sort} options={sortOptions} onChange={setSort} />
       <div className="view-switch" aria-label="نحوه نمایش">
-        <button className={view === 'cards' ? 'selected' : ''} onClick={() => setView('cards')} aria-label="نمای کارت‌ها" data-tooltip="نمای کارت‌ها"><LayoutGrid className="ui-icon" aria-hidden="true" /></button>
-        <button className={view === 'list' ? 'selected' : ''} onClick={() => setView('list')} aria-label="نمای فهرست" data-tooltip="نمای فهرست"><List className="ui-icon" aria-hidden="true" /></button>
+        <button aria-pressed={view === 'cards'} onClick={() => setView('cards')} aria-label="نمای کارت‌ها" data-tooltip="نمای کارت‌ها"><LayoutGrid className="ui-icon" aria-hidden="true" /></button>
+        <button aria-pressed={view === 'list'} onClick={() => setView('list')} aria-label="نمای فهرست" data-tooltip="نمای فهرست"><List className="ui-icon" aria-hidden="true" /></button>
       </div>
     </section>
     {projects.length === 0 ? <section className="c empty-panel">
-      <div className="empty-icon"><Search className="ui-icon" aria-hidden="true" /></div><h2>{st.projects.length ? 'پروژه‌ای پیدا نشد' : 'هنوز پروژه‌ای نداری'}</h2>
+      <div className="empty-icon">{st.projects.length ? <Search className="ui-icon" aria-hidden="true" /> : <Folder className="ui-icon" aria-hidden="true" />}</div><h2>{st.projects.length ? 'پروژه‌ای پیدا نشد' : 'هنوز پروژه‌ای نداری'}</h2>
       <p className="m">{st.projects.length ? 'عبارت جست‌وجو یا فیلتر وضعیت را تغییر بده.' : 'برای شروع، اولین پروژه‌ات را بساز.'}</p>
       {!st.projects.length && <button className="btn" onClick={createProject}><Plus className="ui-icon ui-icon-lg" aria-hidden="true" />ایجاد پروژه</button>}
     </section> : view === 'list' ? <section className="c project-table-wrap" role="table" aria-label="فهرست پروژه‌ها">
@@ -73,12 +73,13 @@ export default function Projects({ st, openProject, createProject, editProject, 
         <div className="project-table-header" role="row">
           <div role="columnheader">پروژه</div><div role="columnheader">وضعیت</div><div role="columnheader">پیشرفت</div><div role="columnheader">وظایف</div><div role="columnheader">ددلاین</div><div role="columnheader"><span className="sr-only">گزینه‌ها</span></div>
         </div>
-        <div role="rowgroup">
+      </div>
+      <div role="rowgroup">
       {projects.map(project => {
         const stats = progress(st.tasks, project.id)
         const days = project.end ? daysLeft(project.end) : null
-        return <div className="project-table-row" key={project.id} role="row" onClick={() => openProject(project.id)} tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && event.key === 'Enter') openProject(project.id) }}>
-          <div role="cell"><div className="table-project"><span className="project-mark" style={{ background: `${project.color}18`, color: project.color }}>{project.name.trim().charAt(0) || 'پ'}</span><span><b>{project.name}</b><small>{project.desc || 'بدون توضیحات'}</small></span></div></div>
+        return <div className="project-table-row" key={project.id} role="row">
+          <div role="cell"><div className="table-project"><span className="project-mark" aria-hidden="true" style={{ background: `${project.color}18`, color: project.color }}>{project.name.trim().charAt(0) || 'پ'}</span><span><button className="project-open" onClick={() => openProject(project.id)}>{project.name}</button>{project.desc && <small>{project.desc}</small>}</span></div></div>
           <div role="cell"><span className={`b ${STATUS[project.status].cls}`}>{STATUS[project.status].label}</span></div>
           <div className="table-progress" role="cell"><div className="pr"><i style={{ width: `${stats.pct}%`, background: project.color }} /></div><b className="s">{fa(stats.pct)}٪</b></div>
           <div className="table-task-count" role="cell">{progressLabel(project)}</div>
@@ -86,24 +87,23 @@ export default function Projects({ st, openProject, createProject, editProject, 
           <div role="cell">{projectMenu(project)}</div>
         </div>
       })}
-        </div>
       </div>
     </section> : <div className="project-grid">
       {projects.map(project => {
         const stats = progress(st.tasks, project.id)
         const days = project.end ? daysLeft(project.end) : null
-        return <article className="c project-card" key={project.id} onClick={() => openProject(project.id)} tabIndex={0} onKeyDown={event => { if (event.key === 'Enter') openProject(project.id) }}>
+        return <article className="c project-card" key={project.id}>
           <div className="project-card-top">
-            <div className="project-mark" style={{ background: `${project.color}18`, color: project.color }}>{project.name.trim().charAt(0) || 'پ'}</div>
+            <div className="project-mark" aria-hidden="true" style={{ background: `${project.color}18`, color: project.color }}>{project.name.trim().charAt(0) || 'پ'}</div>
             <div className="project-card-badges"><span className={`b ${STATUS[project.status].cls}`}>{STATUS[project.status].label}</span>{projectMenu(project)}</div>
           </div>
-          <h2 className="project-card-name">{project.name}</h2>
-          <p className="project-description">{project.desc || 'بدون توضیحات'}</p>
+          <h2 className="project-card-name"><button className="project-open" onClick={() => openProject(project.id)}>{project.name}</button></h2>
+          <p className="project-description">{project.desc}</p>
           <div className="project-progress-copy"><span>{progressLabel(project)}</span><b>{fa(stats.pct)}٪</b></div>
           <div className="pr"><i style={{ width: `${stats.pct}%`, background: project.color }} /></div>
           <div className="project-card-bottom">
-            <span className="s m">{project.end ? fmt(project.end) : 'بدون ددلاین'}</span>
-            {days === null ? <span className="s m">—</span> : days < 0 ? <span className="ur s">{fa(-days)} روز گذشته</span> : days === 0 ? <span className="uw s">امروز</span> : <span className={`s ${days <= st.preferences.deadlineWarningDays ? 'uw' : 'm'}`}>{fa(days)} روز مانده</span>}
+            <span className="card-date s m"><CalendarDays className="ui-icon" aria-hidden="true" />{project.end ? fmt(project.end) : 'بدون ددلاین'}</span>
+            {days !== null && <span className={`s ${days < 0 ? 'ur' : days <= st.preferences.deadlineWarningDays ? 'uw' : 'm'}`}>{days < 0 ? `${fa(-days)} روز گذشته` : days === 0 ? 'امروز' : `${fa(days)} روز مانده`}</span>}
           </div>
         </article>
       })}

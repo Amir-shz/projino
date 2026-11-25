@@ -6,7 +6,8 @@ import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 const WEEKDAYS = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج']
 const MONTHS = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
 
-export default function JalaliPicker({ value, onChange, weekStart, summary, minDate }: {
+export default function JalaliPicker({ label, value, onChange, weekStart, summary, minDate }: {
+  label: string
   value: string | null
   onChange: (value: string | null) => void
   weekStart: 'saturday' | 'sunday' | 'monday'
@@ -48,6 +49,11 @@ export default function JalaliPicker({ value, onChange, weekStart, summary, minD
     }
   }, [open, monthPickerOpen])
 
+  const calendarPositioned = position !== null
+  useEffect(() => {
+    if (calendarPositioned) popup.current?.querySelector<HTMLElement>('.calendar-month-trigger')?.focus({ preventScroll: true })
+  }, [calendarPositioned])
+
   useEffect(() => {
     if (!open) return
     const outside = (event: PointerEvent) => {
@@ -87,11 +93,17 @@ export default function JalaliPicker({ value, onChange, weekStart, summary, minD
   const todayValue = today()
   const now = jalali(todayValue)
   const currentMonthLabel = MONTHS[now.month - 1]
+  const dateLabel = value ? new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${value}T12:00:00`)) : 'انتخاب تاریخ'
+  const chooseDate = (date: string | null) => {
+    onChange(date)
+    setOpen(false)
+    trigger.current?.focus()
+  }
 
   return (
     <div className="date-picker" ref={root}>
-      <button ref={trigger} type="button" className="field date-trigger" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setOpen(!open); setMonthPickerOpen(false) }}>
-        <span>{value ? new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${value}T12:00:00`)) : 'انتخاب تاریخ'}</span>
+      <button ref={trigger} type="button" className="field date-trigger" aria-label={`${label}، ${dateLabel}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => { setOpen(!open); setMonthPickerOpen(false) }}>
+        <span>{dateLabel}</span>
         <CalendarDays className="ui-icon ui-icon-md m" aria-hidden="true" />
       </button>
       {open && createPortal(<div
@@ -139,21 +151,18 @@ export default function JalaliPicker({ value, onChange, weekStart, summary, minD
                 key={day}
                 disabled={disabled}
                 className={`calendar-day${active ? ' selected' : ''}${isToday ? ' today' : ''}`}
-                onClick={() => {
-                  onChange(date)
-                  setOpen(false)
-                }}
+                onClick={() => chooseDate(date)}
               >{fa(day)}</button>
             })}
           </div>
           {minDate && <div className="calendar-disabled-note">قبل از شروع ({new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric', month: 'long' }).format(new Date(`${minDate}T12:00:00`))}) قابل انتخاب نیست</div>}
           <div className="calendar-foot">
-            <button type="button" className="text-btn" disabled={Boolean(minDate && todayValue < minDate)} onClick={() => { onChange(todayValue); setMonth(now); setOpen(false) }}>امروز</button>
+            <button type="button" className="text-btn" disabled={Boolean(minDate && todayValue < minDate)} onClick={() => { chooseDate(todayValue); setMonth(now) }}>امروز</button>
             {summary && <span className="s m">{summary}</span>}
-            {value && <button type="button" className="text-btn" onClick={() => { onChange(null); setOpen(false); setMonthPickerOpen(false) }}>پاک‌کردن</button>}
+            {value && <button type="button" className="text-btn" onClick={() => chooseDate(null)}>پاک‌کردن</button>}
           </div>
         </>}
-      </div>, root.current?.closest('.a') || document.body)}
+      </div>, root.current?.closest('.modal-backdrop') || document.body)}
     </div>
   )
 }

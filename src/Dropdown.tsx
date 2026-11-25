@@ -10,7 +10,7 @@ export type DropdownOption<T extends string | number> = {
 }
 
 export default function Dropdown<T extends string | number>({
-  value, options, onChange, ariaLabel, className = '', showChevron = false,
+  value, options, onChange, ariaLabel, className = '', showChevron = true,
   showValueTone = false, showOptionTones = false, buttonLabel, statusTrigger = false,
 }: {
   value: T

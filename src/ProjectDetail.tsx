@@ -4,7 +4,7 @@ import type { Project, State, Status, Task } from './types'
 import { daysLeft, fa, fmt, fmtShort, progress, STATUS, STATUS_OPTIONS } from './util'
 import Dropdown from './Dropdown'
 import ProjectMenu from './ProjectMenu'
-import { Check, ChevronLeft, Pencil, Plus, Trash2 } from 'lucide-react'
+import { CalendarDays, Check, ChevronLeft, FileText, ListTodo, Pencil, Plus, Trash2 } from 'lucide-react'
 
 export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, onCopyName, onStatusChange, onToggle, onAddTask, onEditTask, onDeleteTask }: {
   project: Project
@@ -66,11 +66,11 @@ export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, o
     <header className="page-head detail-head">
       <div className="detail-heading">
         <div className="detail-breadcrumbs"><button className="back-link" onClick={onBack}>پروژه‌ها</button><ChevronLeft className="ui-icon ui-icon-sm" aria-hidden="true" /><span>{project.name}</span></div>
-        <div className="detail-title"><h1>{project.name}</h1><span className={`b ${STATUS[project.status].cls}`}>{STATUS[project.status].label}</span></div>
+        <div className="detail-title"><span className="project-mark" aria-hidden="true" style={{ background: `${project.color}18`, color: project.color }}>{project.name.trim().charAt(0) || 'پ'}</span><h1>{project.name}</h1><span className={`b ${STATUS[project.status].cls}`}>{STATUS[project.status].label}</span></div>
       </div>
       <div className="detail-actions">
         <ProjectMenu project={project} triggerLabel="گزینه‌های بیشتر" triggerClassName="icon-btn action-menu-button" onEdit={onEdit} onStatusChange={onStatusChange} onCopyName={onCopyName} onDelete={onDelete} />
-        <button className="btn" onClick={onEdit}>ویرایش پروژه</button>
+        <button className="btn" onClick={onEdit}><Pencil className="ui-icon" aria-hidden="true" />ویرایش پروژه</button>
       </div>
     </header>
     <section className="c detail-overview">
@@ -79,7 +79,7 @@ export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, o
         <button type="button" onClick={() => onStatusChange('active')}>{statusActions[project.status]}</button>
       </div>}
       <div className="detail-overview-top">
-        <div className="detail-overview-progress"><b>{fa(stats.pct)}٪</b><span>{fa(stats.done)} از {fa(stats.total)} وظیفه{deadlineInactive ? '' : ' انجام شده'}</span></div>
+        <div><h2>پیشرفت پروژه</h2><div className="detail-overview-progress"><b>{fa(stats.pct)}٪</b><span>{fa(stats.done)} از {fa(stats.total)} وظیفه انجام شده</span></div></div>
         {deadlineInactive ? <span className="b bn">ددلاین غیرفعال</span> : days === null ? <span className="b bn">بدون ددلاین</span> : <span className={`b ${days < 0 ? 'br' : days <= st.preferences.deadlineWarningDays ? 'bw' : 'bg'}`}>{days < 0 ? `${fa(-days)} روز از ددلاین` : days === 0 ? 'امروز ددلاین است' : `${fa(days)} روز تا ددلاین`}</span>}
       </div>
       <div className="pr detail-overview-bar"><i style={{ width: `${stats.pct}%`, background: project.color }} /></div>
@@ -91,9 +91,9 @@ export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, o
     </section>
     <div className="detail-columns">
       <section className="c task-panel">
-        <div className="section-heading"><div><h2>وظایف پروژه</h2><p className="m s">{fa(stats.total)} وظیفه · {fa(stats.done)} انجام‌شده</p></div>
+        <div className="section-heading"><h2><ListTodo className="ui-icon" aria-hidden="true" />وظایف پروژه</h2>
           <div className="filter-tabs">
-            {([['all', `همه ${fa(stats.total)}`], ['open', `انجام‌نشده ${fa(stats.total - stats.done)}`], ['done', `انجام‌شده ${fa(stats.done)}`]] as const).map(([key, label]) => <button key={key} className={filter === key ? 'active' : ''} onClick={() => setFilter(key)}>{label}</button>)}
+            {([['all', `همه ${fa(stats.total)}`], ['open', `انجام‌نشده ${fa(stats.total - stats.done)}`], ['done', `انجام‌شده ${fa(stats.done)}`]] as const).map(([key, label]) => <button key={key} aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>)}
           </div>
         </div>
         {tasksReadOnly
@@ -102,14 +102,14 @@ export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, o
         {tasks.length ? <div className={`task-list${tasksReadOnly ? ` task-list-locked ${project.status}` : ''}`}>{tasks.map(task => <div className={`task-row${task.done ? ' task-done' : ''}`} key={task.id}>
           <button type="button" className={`ck${task.done ? ' d' : ''}`} aria-label={task.done ? 'علامت‌زدن به‌عنوان انجام‌نشده' : 'علامت‌زدن به‌عنوان انجام‌شده'} data-tooltip={task.done ? 'علامت‌زدن به‌عنوان انجام‌نشده' : 'علامت‌زدن به‌عنوان انجام‌شده'} aria-checked={task.done} role="checkbox" disabled={tasksReadOnly} onClick={() => onToggle(task.id)}>{task.done && <Check className="ui-icon" aria-hidden="true" />}</button>
           {editingTask === task.id && !tasksReadOnly
-            ? <form className="edit-task-form" onSubmit={event => { event.preventDefault(); saveTask(task) }}><input className="field" autoFocus value={editingText} onChange={event => setEditingText(event.target.value)} /><button className="text-btn" type="submit">ذخیره</button><button className="text-btn" type="button" onClick={() => setEditingTask(null)}>انصراف</button></form>
+            ? <form className="edit-task-form" onSubmit={event => { event.preventDefault(); saveTask(task) }}><input className="field" autoFocus aria-label="متن وظیفه" value={editingText} onChange={event => setEditingText(event.target.value)} /><button className="text-btn" type="submit">ذخیره</button><button className="text-btn" type="button" onClick={() => setEditingTask(null)}>انصراف</button></form>
             : <span className="task-text">{task.text}</span>}
           {editingTask !== task.id && !tasksReadOnly && <div className="task-actions"><button type="button" className="icon-btn" aria-label="ویرایش وظیفه" data-tooltip="ویرایش وظیفه" onClick={() => { setEditingTask(task.id); setEditingText(task.text) }}><Pencil className="ui-icon" aria-hidden="true" /></button><button type="button" className="icon-btn danger-hover" aria-label="حذف وظیفه" data-tooltip="حذف وظیفه" onClick={() => onDeleteTask(task)}><Trash2 className="ui-icon" aria-hidden="true" /></button></div>}
         </div>)}</div> : <div className="empty-inline">{filter === 'done' ? 'هنوز وظیفه‌ای انجام نشده.' : filter === 'open' ? 'همهٔ وظایف انجام شده‌اند؛ عالیه!' : 'هنوز وظیفه‌ای اضافه نکرده‌ای.'}</div>}
       </section>
       <aside className="detail-aside">
-        <section className="c info-panel"><h2>توضیحات</h2><p>{project.desc || <span className="m">توضیحی برای این پروژه ثبت نشده است.</span>}</p></section>
-        <section className="c info-panel"><h2>قرارداد</h2>
+        <section className="c info-panel"><h2><FileText className="ui-icon" aria-hidden="true" />توضیحات</h2><p>{project.desc || <span className="m">توضیحی برای این پروژه ثبت نشده است.</span>}</p></section>
+        <section className="c info-panel"><h2><CalendarDays className="ui-icon" aria-hidden="true" />قرارداد</h2>
           <div className="contract-dates"><div><span className="m s">شروع</span><b>{project.start ? fmt(project.start) : '—'}</b></div><div><span className="m s">پایان</span><b>{project.end ? fmt(project.end) : '—'}</b></div></div>
           {duration !== null && <div className="contract-duration"><span className="m s">مدت قرارداد</span><b>{fa(duration)} روز</b></div>}
           <div className="info-divider"><h3>وضعیت ددلاین</h3><div className="status-summary"><span className={`status-dot ${deadlineInactive ? 'inactive' : days !== null && days < 0 ? 'late' : ''}`} />{deadlineInactive ? 'ددلاین این پروژه غیرفعال است.' : days === null ? 'برای این پروژه ددلاینی ثبت نشده.' : days < 0 ? `${fa(-days)} روز از موعد گذشته` : days === 0 ? 'ددلاین امروز است' : `${fa(days)} روز تا ددلاین`}</div></div>

@@ -14,7 +14,7 @@ export const STATUS: Record<Status, { label: string; cls: string }> = {
   completed: { label: 'تکمیل‌شده', cls: 'bg' }, paused: { label: 'متوقف‌شده', cls: 'bw' }, cancelled: { label: 'لغوشده', cls: 'bx' },
 }
 export const STATUS_TONE: Record<Status, string> = {
-  pending: '#B8BDC9', active: '#6258E8', completed: '#0B7A56', paused: '#D9930D', cancelled: '#C13B3B',
+  pending: 'var(--subtle)', active: 'var(--p)', completed: 'var(--g)', paused: 'var(--amber)', cancelled: 'var(--r)',
 }
 export const STATUS_OPTIONS = (Object.keys(STATUS) as Status[]).map(value => ({
   value, label: STATUS[value].label, tone: STATUS_TONE[value],

@@ -93,7 +93,7 @@ export default function App() {
   }
   const routeProject = route.startsWith('project:') ? st.projects.find(project => project.id === route.slice('project:'.length)) : undefined
   const body = route === 'dashboard'
-    ? <Dashboard st={st} go={navigate} toggle={toggle} />
+    ? <Dashboard st={st} go={navigate} openProject={openProject} toggle={toggle} />
     : route === 'projects'
       ? <Projects st={st} openProject={openProject} createProject={() => setFormProject(null)} editProject={project => setFormProject(project)} deleteProject={removeProject} onStatusChange={updateProjectStatus} onCopyName={copyProjectName} />
       : route === 'deadlines'
@@ -110,7 +110,7 @@ export default function App() {
             : <section className="c empty-panel"><h2>پروژه پیدا نشد</h2><button className="bt" onClick={() => go('projects')}>بازگشت به پروژه‌ها</button></section>
   return <Shell route={route} go={navigate}>
     {saveError && <div className="app-alert" role="alert"><span>ذخیره‌سازی ناموفق بود: {saveError}</span><button onClick={() => setSaveError('')} aria-label="بستن" data-tooltip="بستن پیام" data-tooltip-placement="bottom"><X className="ui-icon" aria-hidden="true" /></button></div>}
-    {actionNotice && <div className={actionNotice.error ? 'app-alert' : 'inline-success'} role={actionNotice.error ? 'alert' : 'status'}><span>{actionNotice.text}</span><button onClick={() => setActionNotice(null)} aria-label="بستن" data-tooltip="بستن پیام" data-tooltip-placement="bottom"><X className="ui-icon" aria-hidden="true" /></button></div>}
+    {actionNotice && <div className={actionNotice.error ? 'app-alert' : 'app-alert success'} role={actionNotice.error ? 'alert' : 'status'}><span>{actionNotice.text}</span><button onClick={() => setActionNotice(null)} aria-label="بستن" data-tooltip="بستن پیام" data-tooltip-placement="bottom"><X className="ui-icon" aria-hidden="true" /></button></div>}
     {body}
     {formProject !== undefined && <ProjectForm project={formProject || undefined} preferences={st.preferences} onSave={saveProject} onClose={() => setFormProject(undefined)} />}
   </Shell>

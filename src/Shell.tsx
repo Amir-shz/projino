@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { CalendarDays, Folder, LayoutDashboard, Minus, Settings, Square, X } from 'lucide-react'
+import { CalendarDays, Folder, Layers3, LayoutDashboard, Minus, Settings, Square, X } from 'lucide-react'
 const T = '__TAURI_INTERNALS__' in window
 async function win(a: 'minimize' | 'toggleMaximize' | 'close') {
   if (!T) return
@@ -10,30 +10,30 @@ const NAV = [['dashboard', 'داشبورد', LayoutDashboard], ['projects', 'پ�
 export default function Shell({ route, go, children }: { route: string; go: (r: string) => void; children: ReactNode }) {
   const cur = route.startsWith('project:') ? 'projects' : route
   return (
-    <div className="a">
-      <div className="tb" data-tauri-drag-region>
+    <div className={T ? 'a native-window' : 'a'}>
+      {T && <div className="tb" data-tauri-drag-region>
         <span className="tt" data-tauri-drag-region>
-          <svg width="14" height="14" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#6258E8" /></svg>پروژینو
+          <Layers3 className="ui-icon" aria-hidden="true" />پروژینو
         </span>
         <span className="wc">
           <button aria-label="کوچک‌سازی" data-tooltip="کوچک‌سازی" data-tooltip-placement="bottom" onClick={() => win('minimize')}><Minus className="ui-icon" aria-hidden="true" /></button>
           <button aria-label="بزرگ‌سازی" data-tooltip="بزرگ‌سازی" data-tooltip-placement="bottom" onClick={() => win('toggleMaximize')}><Square className="ui-icon" aria-hidden="true" /></button>
           <button className="x" aria-label="بستن" data-tooltip="بستن" data-tooltip-placement="bottom" onClick={() => win('close')}><X className="ui-icon" aria-hidden="true" /></button>
         </span>
-      </div>
+      </div>}
       <aside className="sb">
         <div className="lg">
-          <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="10" fill="#6258E8" /><path d="M10 12h14M10 17h9M10 22h12" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" fill="none" /></svg>
+          <span className="brand-mark"><Layers3 className="ui-icon" aria-hidden="true" /></span>
           <div><b>پروژینو</b><small>مدیریت پروژه‌های شخصی</small></div>
         </div>
-        <nav className="nv">
+        <nav className="nv" aria-label="ناوبری اصلی">
           {NAV.map(([id, label, Icon]) => (
-            <a key={id} href="#" aria-label={label} data-tooltip={label} className={cur === id ? 'on' : ''} onClick={e => { e.preventDefault(); go(id) }}><Icon className="ui-icon" aria-hidden="true" /><span>{label}</span></a>
+            <button type="button" key={id} aria-label={label} data-tooltip={label} aria-current={cur === id ? 'page' : undefined} className={cur === id ? 'on' : ''} onClick={() => go(id)}><Icon className="ui-icon" aria-hidden="true" /><span>{label}</span></button>
           ))}
         </nav>
         <div className="sf"><span className="s m">نسخه ۱٫۰٫۰</span></div>
       </aside>
-      <main className="mn">{children}</main>
+      <main className="mn" key={route}>{children}</main>
     </div>
   )
 }

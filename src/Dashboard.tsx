@@ -1,75 +1,83 @@
-import type { Project, State } from './types'
-import { fa, STATUS, daysLeft, fmt, todayLong, progress } from './util'
-import { Activity, CalendarDays, CircleCheck, Ellipsis, Folder, Hand, Plus } from 'lucide-react'
+import type { State } from './types'
+import { fa, daysLeft, fmt, todayLong, progress } from './util'
+import { Activity, ArrowLeft, CalendarDays, CircleCheck, Folder, ListTodo, Plus } from 'lucide-react'
 import FirstRun from './FirstRun'
-type P = { st: State; go: (r: string) => void; toggle: (id: string) => void }
-const Days = ({ end }: { end: string | null }) => {
-  if (!end) return <span className="m">بدون ددلاین</span>
-  const d = daysLeft(end)
-  if (d < 0) return <span className="ur">{fa(-d)} روز گذشته</span>
-  if (d === 0) return <span className="uw">امروز</span>
-  return <span className={d <= 7 ? 'uw' : 'u'}>{fa(d)} روز مانده</span>
-}
-export default function Dashboard({ st, go, toggle }: P) {
-  const { projects: ps, tasks } = st
-  if (!ps.length) return <FirstRun go={go} />
-  const open = ps.filter(p => p.status !== 'completed' && p.status !== 'cancelled')
-  const active = ps.filter(p => p.status === 'active')
-  const done = ps.filter(p => p.status === 'completed').length
-  const dl = open.filter(p => p.end).sort((a: Project, b: Project) => (a.end! < b.end! ? -1 : 1))
-  const late = dl.filter(p => daysLeft(p.end!) < 0).length
-  const soon = dl.filter(p => { const d = daysLeft(p.end!); return d >= 0 && d <= 7 }).length
-  const avg = active.length ? Math.round(active.reduce((s, p) => s + progress(tasks, p.id).pct, 0) / active.length) : 0
-  const pend = active.flatMap(p => tasks.filter(t => t.pid === p.id && !t.done).sort((a, b) => a.order - b.order).slice(0, 2).map(t => ({ t, p }))).slice(0, 3)
-  const chip = (d: number) => <span className={'b ' + (d < 0 ? 'br' : 'bw')}>{d < 0 ? `${fa(-d)} روز گذشته` : d === 0 ? 'امروز' : `${fa(d)} روز مانده`}</span>
-  return (
-    <>
-      <header className="hd">
-        <div><div className="s m">داشبورد</div><h1>سلام، خوش اومدی <Hand className="ui-icon ui-icon-lg" aria-hidden="true" /></h1><p>امروز چه خبر از پروژه‌هات؟</p></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span className="m">{todayLong()}</span>
-          <button className="btn" onClick={() => go('project-new')}><Plus className="ui-icon ui-icon-lg" aria-hidden="true" />پروژه جدید</button>
-        </div>
-      </header>
-      <section className="g4">
-        <div className="c k f"><span className="m"><Folder className="ui-icon ki" aria-hidden="true" />کل پروژه‌ها</span><span className="n">{fa(ps.length)}</span><span className="s m">{fa(active.length)} فعال، {fa(done)} تکمیل‌شده</span></div>
-        <div className="c k"><span className="m"><Activity className="ui-icon ki" aria-hidden="true" />در حال انجام</span><span className="n">{fa(active.length)}</span><span className="s m">میانگین پیشرفت {fa(avg)}٪</span></div>
-        <div className="c k"><span className="m"><CircleCheck className="ui-icon ki" aria-hidden="true" />تکمیل‌شده</span><span className="n">{fa(done)}</span><div className="pr" style={{ marginTop: 4 }}><i style={{ width: (done / ps.length) * 100 + '%', background: 'var(--g)' }} /></div></div>
-        <div className="c k"><span className="m"><CalendarDays className="ui-icon ki" aria-hidden="true" />ددلاین‌های نزدیک</span><span className="n">{fa(late + soon)}</span>
-          <span className="s">{late + soon === 0 ? <span className="m">همه‌چیز سر موعده</span> : <>{late > 0 && <span className="b br">{fa(late)} عقب‌افتاده</span>} {soon > 0 && <span className="b bw">{fa(soon)} تا ۷ روز دیگر</span>}</>}</span></div>
-      </section>
-      <div className="gd">
-        <section className="sec">
-          <div className="rw"><h2 className="h2">پروژه‌های در حال انجام</h2><a href="#" className="s" style={{ color: 'var(--p)', fontWeight: 600 }} onClick={e => { e.preventDefault(); go('projects') }}>همه پروژه‌ها</a></div>
-          {active.length ? (
-            <div className="g2">
-              {[...active].sort((a, b) => ((a.end || '9') < (b.end || '9') ? -1 : 1)).slice(0, 4).map(p => {
-                const g = progress(tasks, p.id)
-                return (
-                  <div key={p.id} className="c pc" onClick={() => go('p:' + p.id)}>
-                    <div className="rw"><b className="t2">{p.name}</b><span className="bw2"><span className={'b ' + STATUS[p.status].cls}>{STATUS[p.status].label}</span><button className="dm" aria-label="گزینه‌های پروژه" data-tooltip="گزینه‌های پروژه" onClick={e => e.stopPropagation()}><Ellipsis className="ui-icon" aria-hidden="true" /></button></span></div>
-                    <div className="rw s m"><span>{fa(g.done)} از {fa(g.total)} وظیفه</span><b style={{ color: 'var(--t)' }}>{fa(g.pct)}٪</b></div>
-                    <div className="pr"><i style={{ width: g.pct + '%' }} /></div>
-                    <div className="rw s"><span className="m">{p.end ? `ددلاین ${fmt(p.end)}` : 'بدون ددلاین'}</span><Days end={p.end} /></div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : <div className="c" style={{ padding: 28, textAlign: 'center' }}><b>پروژهٔ فعالی نداری</b><p className="m s" style={{ margin: 0 }}>یک پروژه رو شروع کن یا وضعیتش رو به «در حال انجام» ببر.</p></div>}
-        </section>
-        <aside className="sec">
-          <div className="c dashboard-side-panel"><h2 className="h2 dashboard-side-heading">ددلاین‌های پیش رو</h2>
-            {dl.length ? dl.slice(0, 3).map(p => { const d = daysLeft(p.end!); return (
-              <div key={p.id} className="dl"><span className="dt" style={{ background: d < 0 ? 'var(--r)' : d <= 7 ? '#D9930D' : '#B8BDC9' }} /><div><b>{p.name}</b><div className="s m">{fmt(p.end!)}</div></div>{d <= 7 ? chip(d) : <span className="s m">{fa(d)} روز مانده</span>}</div>) })
-              : <p className="m s" style={{ margin: 0 }}>ددلاین نزدیکی نداری.</p>}
-          </div>
-          <div className="c dashboard-side-panel"><h2 className="h2 dashboard-side-heading">وظایف باقی‌مانده</h2>
-            {pend.length ? pend.map(({ t, p }) => (
-              <div key={t.id} className="tk"><span className="ck" role="checkbox" aria-checked={t.done} tabIndex={0} aria-label={t.text} onClick={() => toggle(t.id)} onKeyDown={e => (e.key === ' ' || e.key === 'Enter') && toggle(t.id)} /><div>{t.text}<div className="s m">{p.name}</div></div></div>))
-              : <p className="m s" style={{ margin: 0 }}>وظیفهٔ باقی‌مونده‌ای نیست.</p>}
-          </div>
-        </aside>
+
+type Props = { st: State; go: (route: string) => void; openProject: (id: string) => void; toggle: (id: string) => void }
+
+export default function Dashboard({ st, go, openProject, toggle }: Props) {
+  const { projects, tasks, preferences } = st
+  if (!projects.length) return <FirstRun go={go} />
+
+  const active = projects.filter(project => project.status === 'active')
+  const completed = projects.filter(project => project.status === 'completed').length
+  const deadlines = projects.filter(project => project.end && project.status !== 'completed' && project.status !== 'cancelled')
+    .map(project => ({ project, days: daysLeft(project.end!) }))
+    .sort((a, b) => a.days - b.days)
+  const late = deadlines.filter(({ days }) => days < 0).length
+  const soon = deadlines.filter(({ days }) => days >= 0 && days <= preferences.deadlineWarningDays).length
+  const activeProgress = active.map(project => ({ project, stats: progress(tasks, project.id) }))
+  const average = active.length ? Math.round(activeProgress.reduce((sum, { stats }) => sum + stats.pct, 0) / active.length) : 0
+  const pending = active.flatMap(project => tasks.filter(task => task.pid === project.id && !task.done)
+    .sort((a, b) => a.order - b.order).slice(0, 2).map(task => ({ task, project }))).slice(0, 3)
+  const metrics = [
+    { icon: Folder, tone: 'brand', label: 'کل پروژه‌ها', value: projects.length, note: `${fa(active.length)} پروژه در حال انجام` },
+    { icon: Activity, tone: 'blue', label: 'در حال انجام', value: active.length, note: `میانگین پیشرفت ${fa(average)}٪` },
+    { icon: CircleCheck, tone: 'green', label: 'تکمیل‌شده', value: completed, note: `${fa(Math.round(completed / projects.length * 100))}٪ از کل پروژه‌ها` },
+    { icon: CalendarDays, tone: 'amber', label: 'ددلاین‌های نزدیک', value: soon, note: late ? `${fa(late)} پروژه از موعد گذشته` : `در ${fa(preferences.deadlineWarningDays)} روز آینده` },
+  ]
+
+  return <>
+    <header className="page-head dashboard-head">
+      <h1>داشبورد</h1>
+      <span className="date-label"><CalendarDays className="ui-icon" aria-hidden="true" />{todayLong()}</span>
+    </header>
+    <section className="dashboard-hero">
+      <div className="hero-copy">
+        <h2>نمای کلی پروژه‌ها</h2>
+        <p>پیشرفت پروژه‌ها، وظایف باقی‌مانده و موعدهای پیش رو</p>
+        <button className="btn hero-button" onClick={() => go('project-new')}><Plus className="ui-icon" aria-hidden="true" />ایجاد پروژه</button>
       </div>
-    </>
-  )
+      <div className="hero-progress">
+        <div className="hero-ring" aria-hidden="true" style={{ background: `conic-gradient(var(--accent-light) ${average}%, #ffffff24 0)` }}><span>{fa(average)}٪</span></div>
+        <div><b><span className="sr-only">{fa(average)}٪ </span>میانگین پیشرفت</b><span>پروژه‌های در حال انجام</span></div>
+      </div>
+    </section>
+    <section className="g4" aria-label="آمار پروژه‌ها">
+      {metrics.map(({ icon: Icon, tone, label, value, note }) => <div key={label} className="c k">
+        <div className="metric-top"><span className={`tile-icon ${tone}`}><Icon className="ui-icon" aria-hidden="true" /></span><span>{label}</span></div>
+        <strong className="n">{fa(value)}</strong>
+        <span className="s m">{note}</span>
+      </div>)}
+    </section>
+    <div className="gd">
+      <section className="c dashboard-panel">
+        <div className="panel-heading"><h2>پروژه‌های در حال انجام</h2><button className="text-btn panel-link" onClick={() => go('projects')}>همه پروژه‌ها<ArrowLeft className="ui-icon" aria-hidden="true" /></button></div>
+        {activeProgress.length ? [...activeProgress].sort((a, b) => (a.project.end || '9').localeCompare(b.project.end || '9')).slice(0, 4)
+          .map(({ project, stats }) => <button className="dashboard-project" key={project.id} onClick={() => openProject(project.id)}>
+            <span className="project-mark" style={{ background: `${project.color}18`, color: project.color }}>{project.name.trim().charAt(0) || 'پ'}</span>
+            <span className="dashboard-project-name"><b>{project.name}</b><span className="s m">{project.end ? fmt(project.end) : 'بدون ددلاین'}</span></span>
+            <span className="dashboard-project-progress"><span className="s m">{fa(stats.done)} از {fa(stats.total)} وظیفه</span><span className="pr"><i style={{ width: `${stats.pct}%`, background: project.color }} /></span></span>
+            <strong>{fa(stats.pct)}٪</strong>
+          </button>) : <p className="empty-inline">پروژه‌ای در حال انجام نیست.</p>}
+      </section>
+      <div className="sec">
+        <section className="c dashboard-panel">
+          <div className="panel-heading"><h2><CalendarDays className="ui-icon" aria-hidden="true" />ددلاین‌ها</h2><button className="text-btn panel-link" onClick={() => go('deadlines')}>مشاهده همه</button></div>
+          {deadlines.length ? deadlines.slice(0, 3).map(({ project, days }) => <button key={project.id} className="dl" onClick={() => openProject(project.id)}>
+            <span className={`deadline-dot ${days < 0 ? 'late' : days <= preferences.deadlineWarningDays ? 'soon' : 'later'}`} />
+            <span className="dashboard-project-name"><b>{project.name}</b><span className="s m">{fmt(project.end!)}</span></span>
+            <span className={`b ${days < 0 ? 'br' : days <= preferences.deadlineWarningDays ? 'bw' : 'bn'}`}>{days < 0 ? `${fa(-days)} روز گذشته` : days === 0 ? 'امروز' : `${fa(days)} روز مانده`}</span>
+          </button>) : <p className="empty-inline">ددلاین ثبت‌شده‌ای نداری.</p>}
+        </section>
+        <section className="c dashboard-panel">
+          <div className="panel-heading"><h2><ListTodo className="ui-icon" aria-hidden="true" />وظایف باقی‌مانده</h2></div>
+          {pending.length ? pending.map(({ task, project }) => <label key={task.id} className="tk">
+            <input type="checkbox" checked={task.done} onChange={() => toggle(task.id)} />
+            <span>{task.text}<span className="s m task-project">{project.name}</span></span>
+          </label>) : <p className="empty-inline">وظیفهٔ باقی‌مانده‌ای نیست.</p>}
+        </section>
+      </div>
+    </div>
+  </>
 }
