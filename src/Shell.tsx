@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { CalendarDays, Folder, Layers3, LayoutDashboard, Minus, Settings, Square, X } from 'lucide-react'
+const brandMark = new URL('./projino-mark.svg', import.meta.url).href
 const T = '__TAURI_INTERNALS__' in window
 async function win(a: 'minimize' | 'toggleMaximize' | 'close') {
   if (!T) return
@@ -23,7 +24,7 @@ export default function Shell({ route, go, children }: { route: string; go: (r: 
       </div>}
       <aside className="sb">
         <div className="lg">
-          <span className="brand-mark"><Layers3 className="ui-icon" aria-hidden="true" /></span>
+          <img className="brand-mark" src={brandMark} width={44} height={44} alt="" />
           <div><b>پروژینو</b><small>مدیریت پروژه‌های شخصی</small></div>
         </div>
         <nav className="nv" aria-label="ناوبری اصلی">

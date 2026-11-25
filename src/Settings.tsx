@@ -3,12 +3,13 @@ import type { ChangeEvent } from 'react'
 import type { Preferences, State } from './types'
 import { DEFAULT_PREFERENCES, fa, today } from './util'
 import Dropdown from './Dropdown'
+import { normalizeState } from './db'
 import { Database, Download, HardDrive, SlidersHorizontal, Upload } from 'lucide-react'
 
 export default function Settings({ st, onPreferences, onImport }: {
   st: State
   onPreferences: (preferences: Preferences) => void
-  onImport: (state: State) => void
+  onImport: (state: State) => Promise<boolean>
 }) {
   const fileInput = useRef<HTMLInputElement>(null)
   const [backupDate, setBackupDate] = useState('')
@@ -49,7 +50,7 @@ export default function Settings({ st, onPreferences, onImport }: {
         throw new Error('فایل انتخاب‌شده ساختار پشتیبان پروژینو را ندارد.')
       }
       if (!window.confirm(`اطلاعات فعلی با ${fa(candidate.projects.length)} پروژه جایگزین شود؟`)) return
-      onImport({
+      const imported = normalizeState({
         projects: candidate.projects as State['projects'],
         tasks: candidate.tasks as State['tasks'],
         preferences: {
@@ -58,6 +59,7 @@ export default function Settings({ st, onPreferences, onImport }: {
             ? candidate.preferences : {}),
         },
       })
+      if (!await onImport(imported)) throw new Error('ذخیرهٔ داده‌های بازیابی‌شده ناموفق بود.')
       setMessage('بازیابی اطلاعات با موفقیت انجام شد.')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'خواندن فایل پشتیبان ناموفق بود.')

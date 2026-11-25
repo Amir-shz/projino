@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import type { Project, State, Status, Task } from './types'
+import type { Project, ProjectResource, State, Status, Task } from './types'
 import { daysLeft, fa, fmt, fmtShort, progress, STATUS, STATUS_OPTIONS } from './util'
 import Dropdown from './Dropdown'
 import ProjectMenu from './ProjectMenu'
+import ProjectResources from './ProjectResources'
 import { CalendarDays, Check, ChevronLeft, FileText, ListTodo, Pencil, Plus, Trash2 } from 'lucide-react'
 
-export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, onCopyName, onStatusChange, onToggle, onAddTask, onEditTask, onDeleteTask }: {
+export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, onCopyName, onStatusChange, onToggle, onAddTask, onEditTask, onDeleteTask, onResourcesChange }: {
   project: Project
   st: State
   onBack: () => void
@@ -18,6 +19,7 @@ export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, o
   onAddTask: (text: string) => void
   onEditTask: (id: string, text: string) => void
   onDeleteTask: (task: Task) => void
+  onResourcesChange: (change: (items: ProjectResource[]) => ProjectResource[]) => Promise<boolean>
 }) {
   const [filter, setFilter] = useState<'all' | 'open' | 'done'>('all')
   const [text, setText] = useState('')
@@ -90,6 +92,7 @@ export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, o
       </div>
     </section>
     <div className="detail-columns">
+      <div className="detail-main">
       <section className="c task-panel">
         <div className="section-heading"><h2><ListTodo className="ui-icon" aria-hidden="true" />وظایف پروژه</h2>
           <div className="filter-tabs">
@@ -107,6 +110,8 @@ export default function ProjectDetail({ project, st, onBack, onEdit, onDelete, o
           {editingTask !== task.id && !tasksReadOnly && <div className="task-actions"><button type="button" className="icon-btn" aria-label="ویرایش وظیفه" data-tooltip="ویرایش وظیفه" onClick={() => { setEditingTask(task.id); setEditingText(task.text) }}><Pencil className="ui-icon" aria-hidden="true" /></button><button type="button" className="icon-btn danger-hover" aria-label="حذف وظیفه" data-tooltip="حذف وظیفه" onClick={() => onDeleteTask(task)}><Trash2 className="ui-icon" aria-hidden="true" /></button></div>}
         </div>)}</div> : <div className="empty-inline">{filter === 'done' ? 'هنوز وظیفه‌ای انجام نشده.' : filter === 'open' ? 'همهٔ وظایف انجام شده‌اند؛ عالیه!' : 'هنوز وظیفه‌ای اضافه نکرده‌ای.'}</div>}
       </section>
+      <ProjectResources items={project.resources ?? []} confirmDelete={st.preferences.confirmDelete} onChange={onResourcesChange} />
+      </div>
       <aside className="detail-aside">
         <section className="c info-panel"><h2><FileText className="ui-icon" aria-hidden="true" />توضیحات</h2><p>{project.desc || <span className="m">توضیحی برای این پروژه ثبت نشده است.</span>}</p></section>
         <section className="c info-panel"><h2><CalendarDays className="ui-icon" aria-hidden="true" />قرارداد</h2>

@@ -1,11 +1,16 @@
 import type { State } from './types'
 import { DEFAULT_PREFERENCES } from './util'
+import { isProjectResource } from './projectFiles'
 const T = '__TAURI_INTERNALS__' in window
 const EMPTY: State = { projects: [], tasks: [], preferences: DEFAULT_PREFERENCES }
 let sql: { execute: (q: string, a?: unknown[]) => Promise<unknown>; select: <R>(q: string, a?: unknown[]) => Promise<R> } | null = null
-function normalizeState(value: Partial<State> | null): State {
+export function normalizeState(value: Partial<State> | null): State {
   if (!value || !Array.isArray(value.projects) || !Array.isArray(value.tasks)) {
     throw new Error('ساختار اطلاعات ذخیره‌شده معتبر نیست.')
+  }
+  if (value.projects.some(project => !project || (project.resources !== undefined
+    && (!Array.isArray(project.resources) || !project.resources.every(isProjectResource))))) {
+    throw new Error('فایل‌ها یا یادداشت‌های ذخیره‌شده معتبر نیستند.')
   }
   return {
     projects: value.projects,

@@ -13,7 +13,7 @@ const COLORS = [
 export default function ProjectForm({ project, preferences, onSave, onClose }: {
   project?: Project
   preferences: Preferences
-  onSave: (project: Project) => void
+  onSave: (project: Project) => Promise<boolean>
   onClose: () => void
 }) {
   const [name, setName] = useState(project?.name || '')
@@ -23,6 +23,7 @@ export default function ProjectForm({ project, preferences, onSave, onClose }: {
   const [end, setEnd] = useState<string | null>(project?.end || null)
   const [color, setColor] = useState(project?.color || COLORS[0][0])
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
   const dialog = useRef<HTMLDialogElement>(null)
   const nameField = useRef<HTMLInputElement>(null)
   const icon = name.trim().charAt(0) || 'پ'
@@ -35,23 +36,27 @@ export default function ProjectForm({ project, preferences, onSave, onClose }: {
     return () => element?.close()
   }, [])
 
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (saving) return
     if (!name.trim()) { setError('نام پروژه را وارد کن.'); nameField.current?.focus(); return }
     if (start && end && start > end) { setError('تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.'); return }
-    onSave({
+    setSaving(true)
+    const success = await onSave({
       id: project?.id || uid(), name: name.trim(), desc: desc.trim(), status,
       start, end, color, icon, completedAt: project?.completedAt,
     })
+    if (!success) setError('ذخیرهٔ پروژه ناموفق بود. دوباره تلاش کن.')
+    setSaving(false)
   }
 
   return (
-    <dialog ref={dialog} className="modal-backdrop" aria-labelledby="project-form-title" onCancel={event => { event.preventDefault(); onClose() }} onClick={event => { if (event.target === event.currentTarget) onClose() }}>
+    <dialog ref={dialog} className="modal-backdrop" aria-labelledby="project-form-title" onCancel={event => { event.preventDefault(); if (!saving) onClose() }} onClick={event => { if (!saving && event.target === event.currentTarget) onClose() }}>
       <form className="modal project-form" onSubmit={submit} dir="rtl">
         <header className="modal-head">
           <span className="tile-icon brand"><Folder className="ui-icon" aria-hidden="true" /></span>
           <h2 id="project-form-title">{project ? 'ویرایش پروژه' : 'ایجاد پروژه جدید'}</h2>
-          <button type="button" className="icon-btn close-btn" aria-label="بستن" data-tooltip="بستن" data-tooltip-placement="bottom" onClick={onClose}><X className="ui-icon" aria-hidden="true" /></button>
+          <button type="button" disabled={saving} className="icon-btn close-btn" aria-label="بستن" data-tooltip="بستن" data-tooltip-placement="bottom" onClick={onClose}><X className="ui-icon" aria-hidden="true" /></button>
         </header>
         <div className="form-body">
           <label className="form-label"><span className="form-label-heading">نام پروژه <span className="required">*</span></span>
@@ -81,8 +86,8 @@ export default function ProjectForm({ project, preferences, onSave, onClose }: {
           </div>
         </div>
         <footer className="modal-foot">
-          <button className="btn" type="submit">{project ? 'ذخیره تغییرات' : 'ایجاد پروژه'}</button>
-          <button className="bt" type="button" onClick={onClose}>انصراف</button>
+          <button className="btn" type="submit" disabled={saving}>{saving ? 'در حال ذخیره…' : project ? 'ذخیره تغییرات' : 'ایجاد پروژه'}</button>
+          <button className="bt" type="button" disabled={saving} onClick={onClose}>انصراف</button>
         </footer>
       </form>
     </dialog>

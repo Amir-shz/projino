@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { loadState, saveState } from './db'
-import type { Project, State, Status, Task } from './types'
+import type { Project, ProjectResource, State, Status, Task } from './types'
 import Shell from './Shell'
 import Dashboard from './Dashboard'
 import Projects from './Projects'
@@ -10,6 +10,7 @@ import Settings from './Settings'
 import ProjectForm from './ProjectForm'
 import { setPersianDigits, today, uid } from './util'
 import { X } from 'lucide-react'
+import { fileBudget, resourceBytes } from './projectFiles'
 
 export default function App() {
   const [st, setSt] = useState<State | null>(null)
@@ -19,32 +20,53 @@ export default function App() {
   const [saveError, setSaveError] = useState('')
   const [actionNotice, setActionNotice] = useState<{ text: string; error: boolean } | null>(null)
   const saveQueue = useRef(Promise.resolve())
+  const savedState = useRef<State | null>(null)
   const actionNoticeTimer = useRef<number | null>(null)
   useEffect(() => {
     loadState().then(value => {
       setPersianDigits(value.preferences.persianDigits)
+      savedState.current = value
       setSt(value)
       go(value.preferences.startPage)
     }).catch(reason => setLoadError(reason instanceof Error ? reason.message : 'بارگذاری اطلاعات ناموفق بود.'))
   }, [])
   if (!st) return <div className="startup-error" role="alert">{loadError || 'در حال بارگذاری پروژینو…'}</div>
   const up = (f: (s: State) => State) => {
-    const next = f(st)
-    setSt(next)
-    saveQueue.current = saveQueue.current.then(() => saveState(next)).catch(reason => {
+    const pending = saveQueue.current.then(async () => {
+      const next = f(savedState.current!)
+      await saveState(next)
+      savedState.current = next
+      setPersianDigits(next.preferences.persianDigits)
+      setSaveError('')
+      setSt(next)
+    })
+    saveQueue.current = pending.catch(() => {})
+    return pending.then(() => true, reason => {
       setSaveError(reason instanceof Error ? reason.message : 'ذخیرهٔ اطلاعات ناموفق بود.')
+      return false
     })
   }
+  const updateResources = (id: string, change: (items: ProjectResource[]) => ProjectResource[]) => up(state => {
+    const project = state.projects.find(item => item.id === id)
+    if (!project) throw new Error('پروژه پیدا نشد.')
+    const resources = change(project.resources ?? [])
+    const delta = resourceBytes(resources) - resourceBytes(project.resources ?? [])
+    if (delta > 0 && state.projects.reduce((total, item) => total + resourceBytes(item.resources ?? []), delta) > fileBudget.total) {
+      throw new Error('ظرفیت پیوست‌های برنامه پر است. یک فایل کوچک‌تر انتخاب کن یا پیوستی را حذف کن.')
+    }
+    return { ...state, projects: state.projects.map(item => item.id === id ? { ...item, resources } : item) }
+  })
   const toggle = (id: string) => up(s => ({ ...s, tasks: s.tasks.map(t => (t.id === id ? { ...t, done: !t.done } : t)) }))
   const navigate = (next: string) => {
     if (next === 'project-new') { setFormProject(null); return }
     go(next)
   }
   const openProject = (id: string) => go(`project:${id}`)
-  const saveProject = (project: Project) => {
-    up(s => {
+  const saveProject = async (project: Project) => {
+    const success = await up(s => {
       const current = s.projects.find(item => item.id === project.id)
       const savedProject = {
+        ...current,
         ...project,
         completedAt: project.status === 'completed'
           ? project.completedAt || current?.completedAt || today()
@@ -54,13 +76,15 @@ export default function App() {
         ? s.projects.map(item => item.id === project.id ? savedProject : item)
         : [...s.projects, savedProject] }
     })
+    if (!success) return false
     setFormProject(undefined)
     go(`project:${project.id}`)
+    return true
   }
-  const removeProject = (project: Project) => {
-    if (st.preferences.confirmDelete && !window.confirm(`پروژهٔ «${project.name}» و همهٔ وظایفش حذف شود؟`)) return
-    up(s => ({ ...s, projects: s.projects.filter(item => item.id !== project.id), tasks: s.tasks.filter(task => task.pid !== project.id) }))
-    if (route === `project:${project.id}`) go('projects')
+  const removeProject = async (project: Project) => {
+    if (st.preferences.confirmDelete && !window.confirm(`پروژهٔ «${project.name}» و همهٔ وظایف، یادداشت‌ها و پیوست‌هایش حذف شود؟`)) return
+    const success = await up(s => ({ ...s, projects: s.projects.filter(item => item.id !== project.id), tasks: s.tasks.filter(task => task.pid !== project.id) }))
+    if (success) go(current => current === `project:${project.id}` ? 'projects' : current)
   }
   const removeTask = (task: Task) => {
     if (st.preferences.confirmDelete && !window.confirm(`وظیفهٔ «${task.text}» حذف شود؟`)) return
@@ -99,12 +123,13 @@ export default function App() {
       : route === 'deadlines'
         ? <Deadlines st={st} openProject={openProject} />
         : route === 'settings'
-          ? <Settings st={st} onPreferences={preferences => { setPersianDigits(preferences.persianDigits); up(s => ({ ...s, preferences })) }} onImport={imported => { setPersianDigits(imported.preferences.persianDigits); up(() => imported) }} />
+          ? <Settings st={st} onPreferences={preferences => { void up(s => ({ ...s, preferences })) }} onImport={imported => up(() => imported)} />
           : routeProject
             ? <ProjectDetail project={routeProject} st={st} onBack={() => go('projects')} onEdit={() => setFormProject(routeProject)} onDelete={() => removeProject(routeProject)} onCopyName={() => copyProjectName(routeProject)}
               onStatusChange={status => updateProjectStatus(routeProject.id, status)}
               onEditTask={(id, text) => up(s => ({ ...s, tasks: s.tasks.map(task => task.id === id ? { ...task, text } : task) }))}
               onToggle={toggle}
+              onResourcesChange={change => updateResources(routeProject.id, change)}
               onAddTask={text => up(s => ({ ...s, tasks: [...s.tasks, { id: uid(), pid: routeProject.id, text, done: false, order: s.tasks.filter(task => task.pid === routeProject.id).length }] }))}
               onDeleteTask={removeTask} />
             : <section className="c empty-panel"><h2>پروژه پیدا نشد</h2><button className="bt" onClick={() => go('projects')}>بازگشت به پروژه‌ها</button></section>
