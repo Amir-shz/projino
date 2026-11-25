@@ -39,7 +39,7 @@ export default function Dashboard({ st, go, openProject, toggle }: Props) {
         <button className="btn hero-button" onClick={() => go('project-new')}><Plus className="ui-icon" aria-hidden="true" />ایجاد پروژه</button>
       </div>
       <div className="hero-progress">
-        <div className="hero-ring" aria-hidden="true" style={{ background: `conic-gradient(var(--accent-light) ${average}%, #ffffff24 0)` }}><span>{fa(average)}٪</span></div>
+        <div className="hero-ring" aria-hidden="true" style={{ background: `conic-gradient(#546ec0 ${average}%, var(--ps) 0)` }}><span>{fa(average)}٪</span></div>
         <div><b><span className="sr-only">{fa(average)}٪ </span>میانگین پیشرفت</b><span>پروژه‌های در حال انجام</span></div>
       </div>
     </section>
