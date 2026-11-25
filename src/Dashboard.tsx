@@ -51,7 +51,7 @@ export default function Dashboard({ st, go, openProject, toggle }: Props) {
       </div>)}
     </section>
     <div className="gd">
-      <section className="c dashboard-panel">
+      <section className="c dashboard-panel dashboard-projects">
         <div className="panel-heading"><h2>پروژه‌های در حال انجام</h2><button className="text-btn panel-link" onClick={() => go('projects')}>همه پروژه‌ها<ArrowLeft className="ui-icon" aria-hidden="true" /></button></div>
         {activeProgress.length ? [...activeProgress].sort((a, b) => (a.project.end || '9').localeCompare(b.project.end || '9')).slice(0, 4)
           .map(({ project, stats }) => <button className="dashboard-project" key={project.id} onClick={() => openProject(project.id)}>

@@ -2,6 +2,8 @@
   --bg:#f7f8fb;
   --surface:#fff;
   --soft:#f0f3f9;
+  --row-hover:#f8faff;
+  --progress-track:#e0e7f3;
   --t:#29344f;
   --m:#53617d;
   --l:#dfe5f1;
@@ -71,7 +73,7 @@ button:disabled { cursor:not-allowed }
 .bg { background:var(--gs); color:var(--g) }
 .bw { background:var(--ws); color:var(--w) }
 .br,.bx { background:var(--rs); color:var(--r) }
-.pr { display:block; height:7px; overflow:hidden; border-radius:99px; background:var(--soft) }
+.pr { display:block; height:7px; overflow:hidden; border-radius:99px; background:var(--progress-track) }
 .pr i { display:block; height:100%; border-radius:inherit; background:var(--p) }
 .m { color:var(--m) }
 .s { font-size:12px }
@@ -152,7 +154,8 @@ textarea.field{resize:vertical;min-height:84px}
 .project-table-header>*{min-width:0;white-space:nowrap}
 .project-table-row{position:relative;padding-block:12px;border-top:1px solid var(--l);font-size:13px;line-height:1.7;transition:background .12s}
 .project-table-row>*{min-width:0}
-.project-table-row:hover{background:var(--soft)}
+.project-table-row:hover,.project-table-row:focus-within{background:var(--row-hover)}
+.project-table-row:last-child{border-end-start-radius:calc(var(--radius) - 1px);border-end-end-radius:calc(var(--radius) - 1px)}
 .project-table-row:focus-visible{position:relative;z-index:1}
 .project-table-row .project-menu-trigger::after{left:0;transform:translateY(2px)}
 .project-table-row .project-menu-trigger:hover::after,.project-table-row .project-menu-trigger:focus-visible::after{transform:translateY(0)}
@@ -397,7 +400,13 @@ textarea.field{resize:vertical;min-height:84px}
 .panel-link{min-height:40px;padding:0 4px;text-align:start;font-weight:600}
 .panel-link .ui-icon{width:14px;height:14px}
 .dashboard-project,.dl,.tk{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:8px 3px;border:0;border-top:1px solid var(--l);background:none;color:var(--t);text-align:start}
-.dashboard-project:hover,.dl:hover,.tk:hover{background:var(--soft)}
+.dl:hover,.tk:hover{background:var(--soft)}
+.dashboard-projects{padding-inline:0;padding-bottom:0}
+.dashboard-projects .panel-heading{padding-inline:16px}
+.dashboard-project{padding-inline:19px;transition:background .12s}
+.dashboard-project:last-child{border-end-start-radius:calc(var(--radius) - 1px);border-end-end-radius:calc(var(--radius) - 1px)}
+.dashboard-project:hover,.dashboard-project:focus-visible{background:var(--row-hover)}
+.dashboard-project:focus-visible{outline-offset:-3px}
 .dashboard-project-name{min-width:0;flex:1}
 .dashboard-project-name>*{display:block;overflow-wrap:anywhere}
 .dashboard-project-progress{display:grid;gap:4px;width:clamp(70px,28%,160px)}
